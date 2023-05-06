@@ -6,76 +6,99 @@ const LAST_ROW_SIZE = 3; // Number of seats in the last row
 const TOTAL_SEATS = 80; // Total number of seats in the coach
 
 function Booking() {
-  const [seats,setSeats] = useState(()=>{
-    const row = new Array(10);
-    for(let i=0;i<9;i++){
-      row[i] = new Array(ROW_SIZE).fill(false);
+  const [seats, setSeats] = useState(() => {
+    const rows = new Array(12);
+    for (let i = 0; i <= 11; i++) {
+      rows[i] = new Array(ROW_SIZE).fill(false);
     }
-    row[9] = new Array(LAST_ROW_SIZE).fill(false);
-    return row;
-  });
-  
-  const [reservedSeats,setReservedSeats] = useState(0);
-
-  const [seatNum, setSeatNum] = useState(()=>{
-    const row = new Array(80).fill(false);
-    return row;
+    rows[11] = new Array(LAST_ROW_SIZE).fill(false);
+    return rows;
   });
 
-  const reserveSeats = (nSeats) =>{
-    let numSeats = Number(nSeats);
-    if((Number(numSeats)+Number(reservedSeats))>TOTAL_SEATS){
-      alert(`Sorry, we are out of ${numSeats} seats`);
+
+  const [reservedSeats, setReservedSeats] = useState(0);
+
+  const reserveSeats = (nSeats) => {
+    let numSeats = Number(nSeats); //converting it to num
+    //no. of seats cannot be greater than 80
+    if (Number(reservedSeats) + Number(numSeats) > TOTAL_SEATS) {
+      alert("Sorry, we are out of seats.");
       return;
     }
-
+    //first we need to find the consecutive seats
     let row = -1;
     let col = -1;
-
-    for(let i=0;i<10;i++){
+    for (let i = 0; i < 11; i++) {
       let consecutive = 0;
-      for(let j=0;j<seats[i].length;j++){
-        if(seats[i][j]===false){
+      for (let j = 0; j < 7; j++) {
+        if (!seats[i][j]) {
           consecutive++;
-          // console.log(consecutive);
-        }
-        else{
-          consecutive=0;
+        } else {
+          consecutive = 0;
         }
 
-        if(consecutive===Number(numSeats)){
+        if (consecutive === numSeats && consecutive !== 0) {
           row = i;
-          col = j-numSeats+1;
+          col = j - numSeats + 1;
+          console.log(row);
           break;
         }
       }
-      if(row!==-1)break;
-    }
-    const newSeats = [...seats];
-    const newSeatNum = [...seatNum];
-    if(row===-1){
-      let count =0;
-      for(let i=0;i<10;i++){
-        for(let j=0;j<seats[i].length;j++){
-          if(count===numSeats)break;
-          if(seats[i][j]===false){
-            seats[i][j]=true;
-            newSeatNum[row*7+col+1] = true;
-          }
-        }
-        if(count===numSeats)break;
+      if (row !== -1) {
+        break;
       }
     }
-    else{
-      for (let i = col; i < col + numSeats; i++) {
-        newSeats[row][i] = true;
-        newSeatNum[row*7+col+1] = true;
+    //checking the last row
+    if (row === -1) {
+      let consecutive = 0;
+      for (let i = 0; i < 3; i++) {
+        if (!seats[11][i]) {
+          consecutive++;
+        } else {
+          consecutive = 0;
+        }
+
+        if (consecutive === numSeats) {
+          row = 11;
+          col = i - numSeats + 1;
+          console.log(row);
+          break;
+        }
       }
     }
 
+    const newSeats = [...seats];
+    if (row === -1) {
+      let tempCount = numSeats;
+      for (let i = 0; i < 12; i++) {
+        for (let j = 0; j < seats.length; j++) {
+          if (tempCount === 0) break;
+          if (newSeats[i][j] === false) {
+            newSeats[i][j] = true;
+            tempCount--;
+          }
+        }
+        if (tempCount === 0) break;
+      }
+      alert(`Reserved ${numSeats}`);
+    } else {
+      for (let i = col; i < col + Number(numSeats); i++) {
+        newSeats[row][i] = true;
+      }
+
+      alert(
+        `Reserved ${numSeats} seats in row ${row + 1}, seats ${
+          row * 7 + col + 1
+        }-${row * 7 + col + Number(numSeats)}`
+      );
+    }
+
+    row = -1;
+    col = -1;
     setSeats(newSeats);
-    setSeatNum(newSeatNum);
-    setReservedSeats(numSeats + reserveSeats);
+    setReservedSeats(reservedSeats + numSeats);
+    console.log(seats);
+    console.log(reservedSeats);
   };
 
   return (
@@ -106,14 +129,11 @@ function Booking() {
               type="button "
               onClick={() => {
                 const val = document.getElementById("seats").value;
-                if(Number(val)===-1){
+                if (Number(val) === -1) {
                   alert(`Select the seat number!!!!`);
-                  return; 
+                  return;
                 }
                 reserveSeats(val);
-                console.log(seats);
-                console.log(seatNum);
-                console.log(reservedSeats);
               }}
               className="btn btn-dark m-5"
             >
@@ -124,26 +144,301 @@ function Booking() {
         <div className="container mx-auto">
           <div className="row mt-4 ">
             <div className="col">
-              <div className="card" style={{ width: "35rem", height: "14rem" }}>
+              <div className="card" style={{ width: "35rem", height: "23rem" }}>
                 <div className="card-body border border-3 overflow-auto">
-                  <h5 className="card-title text-success rounded ">Available Seat Numbers</h5>
+                  <h5 className="card-title text-success rounded fw-bold">
+                    Available Seat Numbers
+                  </h5>
                   <div className="row">
-                    {seatNum.map((curr, ind, arr) => {
-                      return !curr && <div key={ind} className="col">{ind + 1}</div>;
+                    {seats[0].map((curr, ind, arr) => {
+                      return (
+                        (
+                          <div key={0*7 + ind +1} className={curr?`col fw-bold text-danger`:`col`}>
+                            {0*7 + ind +1}
+                          </div>
+                        )
+                      );
+                    })}
+                  </div>
+                  <div className="row">
+                    {seats[1].map((curr, ind, arr) => {
+                      return (
+                        (
+                          <div key={1*7 + ind +1} className={curr?`col fw-bold text-danger`:`col`}>
+                            {1*7 + ind +1}
+                          </div>
+                        )
+                      );
+                    })}
+                  </div>
+                  <div className="row">
+                    {seats[2].map((curr, ind, arr) => {
+                      return (
+                         (
+                          <div key={2*7 + ind +1} className={curr?`col fw-bold text-danger`:`col`}>
+                            {2*7 + ind +1}
+                          </div>
+                        )
+                      );
+                    })}
+                  </div>
+
+                  <div className="row">
+                    {seats[3].map((curr, ind, arr) => {
+                      return (
+                        (
+                          <div key={3*7 + ind +1} className={curr?`col fw-bold text-danger`:`col`}>
+                            {3*7 + ind +1}
+                          </div>
+                        )
+                      );
+                    })}
+                  </div>
+
+                  <div className="row">
+                    {seats[4].map((curr, ind, arr) => {
+                      return (
+                        (
+                          <div key={4*7 + ind +1} className={curr?`col fw-bold text-danger`:`col`}>
+                            {4*7 + ind +1}
+                          </div>
+                        )
+                      );
+                    })}
+                  </div>
+
+                  <div className="row">
+                    {seats[5].map((curr, ind, arr) => {
+                      return (
+                        (
+                          <div key={5*7 + ind +1} className={curr?`col fw-bold text-danger`:`col`}>
+                            {5*7 + ind +1}
+                          </div>
+                        )
+                      );
+                    })}
+                  </div>
+                  <div className="row">
+                    {seats[6].map((curr, ind, arr) => {
+                      return (
+                        (
+                          <div key={6*7 + ind +1} className={curr?`col fw-bold text-danger`:`col`}>
+                            {6*7 + ind +1}
+                          </div>
+                        )
+                      );
+                    })}
+                  </div>
+
+                  <div className="row">
+                    {seats[7].map((curr, ind, arr) => {
+                      return (
+                        (
+                          <div key={7*7 + ind +1} className={curr?`col fw-bold text-danger`:`col`}>
+                            {7*7 + ind +1}
+                          </div>
+                        )
+                      );
+                    })}
+                  </div>
+
+                  <div className="row">
+                    {seats[8].map((curr, ind, arr) => {
+                      return (
+                        (
+                          <div key={8*7 + ind +1} className={curr?`col fw-bold text-danger`:`col`}>
+                            {8*7 + ind +1}
+                          </div>
+                        )
+                      );
+                    })}
+                  </div>
+
+                  <div className="row">
+                    {seats[9].map((curr, ind, arr) => {
+                      return (
+                        (
+                          <div key={9*7 + ind +1} className={curr?`col fw-bold text-danger`:`col`}>
+                            {9*7 + ind +1}
+                          </div>
+                        )
+                      );
+                    })}
+                  </div>
+
+                  <div className="row">
+                    {seats[10].map((curr, ind, arr) => {
+                      return (
+                        (
+                          <div key={10*7 + ind +1} className={curr?`col fw-bold text-danger`:`col`}>
+                            {10*7 + ind +1}
+                          </div>
+                        )
+                      );
+                    })}
+                  </div>
+
+                  <div className="row">
+                    {seats[11].map((curr, ind, arr) => {
+                      return (
+                        (
+                          <div key={11*7 + ind +1} className={curr?`col fw-bold text-danger`:`col`}>
+                            {11*7 + ind +1}
+                          </div>
+                        )
+                      );
                     })}
                   </div>
                 </div>
               </div>
             </div>
             <div className="col">
-              <div className="card" style={{ width: "35rem", height: "14rem" }}>
+              <div className="card" style={{ width: "35rem", height: "23rem" }}>
                 <div className="card-body border border-3 overflow-auto">
-                  <h5 className="card-title text-danger rounded ">Reserved Seat Numbers</h5>
+                  <h5 className="card-title text-danger rounded fw-bold">
+                    Reserved Seat Numbers
+                  </h5>
                   <div className="row">
-                    {seatNum.map((curr, ind, arr) => {
-                      return curr && <div key={ind} className="col">{ind + 1}</div>;
+                    {seats[0].map((curr, ind, arr) => {
+                      return (
+                        curr && (
+                          <div key={0*7 + ind +1} className="col">
+                            {0*7 + ind +1}
+                          </div>
+                        )
+                      );
                     })}
                   </div>
+                  <div className="row">
+                    {seats[1].map((curr, ind, arr) => {
+                      return (
+                        curr && (
+                          <div key={1*7 + ind +1} className="col">
+                            {1*7 + ind +1}
+                          </div>
+                        )
+                      );
+                    })}
+                  </div>
+                  <div className="row">
+                    {seats[2].map((curr, ind, arr) => {
+                      return (
+                        curr && (
+                          <div key={2*7 + ind +1} className="col">
+                            {2*7 + ind +1}
+                          </div>
+                        )
+                      );
+                    })}
+                  </div>
+
+                  <div className="row">
+                    {seats[3].map((curr, ind, arr) => {
+                      return (
+                        curr && (
+                          <div key={3*7 + ind +1} className="col">
+                            {3*7 + ind +1}
+                          </div>
+                        )
+                      );
+                    })}
+                  </div>
+
+                  <div className="row">
+                    {seats[4].map((curr, ind, arr) => {
+                      return (
+                        curr && (
+                          <div key={4*7 + ind +1} className="col">
+                            {4*7 + ind +1}
+                          </div>
+                        )
+                      );
+                    })}
+                  </div>
+
+                  <div className="row">
+                    {seats[5].map((curr, ind, arr) => {
+                      return (
+                        curr && (
+                          <div key={5*7 + ind +1} className="col">
+                            {5*7 + ind +1}
+                          </div>
+                        )
+                      );
+                    })}
+                  </div>
+                  <div className="row">
+                    {seats[6].map((curr, ind, arr) => {
+                      return (
+                        curr && (
+                          <div key={6*7 + ind +1} className="col">
+                            {6*7 + ind +1}
+                          </div>
+                        )
+                      );
+                    })}
+                  </div>
+
+                  <div className="row">
+                    {seats[7].map((curr, ind, arr) => {
+                      return (
+                        curr && (
+                          <div key={7*7 + ind +1} className="col">
+                            {7*7 + ind +1}
+                          </div>
+                        )
+                      );
+                    })}
+                  </div>
+
+                  <div className="row">
+                    {seats[8].map((curr, ind, arr) => {
+                      return (
+                        curr && (
+                          <div key={8*7 + ind +1} className="col">
+                            {8*7 + ind +1}
+                          </div>
+                        )
+                      );
+                    })}
+                  </div>
+
+                  <div className="row">
+                    {seats[9].map((curr, ind, arr) => {
+                      return (
+                        curr && (
+                          <div key={9*7 + ind +1} className="col">
+                            {9*7 + ind +1}
+                          </div>
+                        )
+                      );
+                    })}
+                  </div>
+
+                  <div className="row">
+                    {seats[10].map((curr, ind, arr) => {
+                      return (
+                        curr && (
+                          <div key={10*7 + ind +1} className="col">
+                            {10*7 + ind +1}
+                          </div>
+                        )
+                      );
+                    })}
+                  </div>
+
+                  <div className="row">
+                    {seats[11].map((curr, ind, arr) => {
+                      return (
+                        curr && (
+                          <div key={11*7 + ind +1} className="col">
+                            {11*7 + ind +1}
+                          </div>
+                        )
+                      );
+                    })}
+                  </div>
+
                 </div>
               </div>
             </div>
