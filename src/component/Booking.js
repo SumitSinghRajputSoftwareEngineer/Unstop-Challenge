@@ -6,88 +6,76 @@ const LAST_ROW_SIZE = 3; // Number of seats in the last row
 const TOTAL_SEATS = 80; // Total number of seats in the coach
 
 function Booking() {
-  // const [num,setNum] = useState(0);
-
-  const [seats, setSeats] = useState(() => {
-    const rows = new Array(10);
-    for (let i = 0; i < 10; i++) {
-      rows[i] = new Array(ROW_SIZE).fill(false);
+  const [seats,setSeats] = useState(()=>{
+    const row = new Array(10);
+    for(let i=0;i<9;i++){
+      row[i] = new Array(ROW_SIZE).fill(false);
     }
-    rows[9] = new Array(LAST_ROW_SIZE).fill(false);
-    return rows;
+    row[9] = new Array(LAST_ROW_SIZE).fill(false);
+    return row;
+  });
+  
+  const [reservedSeats,setReservedSeats] = useState(0);
+
+  const [seatNum, setSeatNum] = useState(()=>{
+    const row = new Array(80).fill(false);
+    return row;
   });
 
-  const [seatNum, setSeatNum] = useState(() => {
-    return new Array(TOTAL_SEATS).fill(false);
-  });
-
-  const [reservedSeats, setReservedSeats] = useState(0);
-
-  const reserveSeats = (numSeats) => {
-    if (reservedSeats + numSeats > TOTAL_SEATS) {
-      alert("Sorry, we are out of seats.");
+  const reserveSeats = (nSeats) =>{
+    let numSeats = Number(nSeats);
+    if((Number(numSeats)+Number(reservedSeats))>TOTAL_SEATS){
+      alert(`Sorry, we are out of ${numSeats} seats`);
       return;
     }
-    // let count = 0;
+
     let row = -1;
     let col = -1;
-    for (let i = 0; i < 10; i++) {
+
+    for(let i=0;i<10;i++){
       let consecutive = 0;
-      for (let j = 0; j < seats.length; j++) {
-        if (!seats[i][j]) {
+      for(let j=0;j<seats[i].length;j++){
+        if(seats[i][j]===false){
           consecutive++;
-        } else {
-          consecutive = 0;
+          // console.log(consecutive);
         }
-        if (consecutive === numSeats) {
+        else{
+          consecutive=0;
+        }
+
+        if(consecutive===Number(numSeats)){
           row = i;
-          col = j - numSeats + 1;
+          col = j-numSeats+1;
           break;
         }
       }
-      if (row !== -1) {
-        break;
-      }
+      if(row!==-1)break;
     }
-
     const newSeats = [...seats];
     const newSeatNum = [...seatNum];
-    if (row === -1) {
-      // alert("Sorry, we could not find consecutive seats.");
-      // return;
-      let tempCount = numSeats;
-      for (let i = 0; i < 10; i++) {
-        for (let j = 0; j < seats.length; j++) {
-          if (tempCount === 0) break;
-          if (newSeats[i][j] === false) {
-            newSeats[i][j] = true;
-            tempCount--;
-            newSeatNum[i * 7 + j] = true;
+    if(row===-1){
+      let count =0;
+      for(let i=0;i<10;i++){
+        for(let j=0;j<seats[i].length;j++){
+          if(count===numSeats)break;
+          if(seats[i][j]===false){
+            seats[i][j]=true;
+            newSeatNum[row*7+col+1] = true;
           }
         }
-        if (tempCount === 0) break;
+        if(count===numSeats)break;
       }
-      alert(`Reserved ${numSeats}`);
-    } else {
+    }
+    else{
       for (let i = col; i < col + numSeats; i++) {
         newSeats[row][i] = true;
-        newSeatNum[row * 7 + col] = true;
+        newSeatNum[row*7+col+1] = true;
       }
-      // alert(
-      //   `Reserved ${numSeats} seats in row ${row + 1}, seats ${col + 1}-${
-      //     col + numSeats
-      //   }`
-      // );
-
-      alert(
-        `Reserved ${numSeats} seats in row ${row + 1}, seats ${
-          row * 7 + col + 1
-        }-${row * 7 + col + numSeats}`
-      );
     }
+
     setSeats(newSeats);
     setSeatNum(newSeatNum);
-    setReservedSeats(reservedSeats + numSeats);
+    setReservedSeats(numSeats + reserveSeats);
   };
 
   return (
@@ -105,7 +93,7 @@ function Booking() {
               className="form-select"
               aria-label="Default select example"
             >
-              <option defaultValue={0}>Select the number of seats</option>
+              <option value={-1}>Select the number of seats</option>
               <option value={1}>One</option>
               <option value={2}>Two</option>
               <option value={3}>Three</option>
@@ -118,9 +106,14 @@ function Booking() {
               type="button "
               onClick={() => {
                 const val = document.getElementById("seats").value;
+                if(Number(val)===-1){
+                  alert(`Select the seat number!!!!`);
+                  return; 
+                }
                 reserveSeats(val);
                 console.log(seats);
                 console.log(seatNum);
+                console.log(reservedSeats);
               }}
               className="btn btn-dark m-5"
             >
@@ -128,15 +121,15 @@ function Booking() {
             </button>
           </div>
         </div>
-        <div className="container">
-          <div className="row mt-4">
+        <div className="container mx-auto">
+          <div className="row mt-4 ">
             <div className="col">
               <div className="card" style={{ width: "35rem", height: "14rem" }}>
-                <div className="card-body">
-                  <h5 className="card-title">Available Seat Numbers</h5>
+                <div className="card-body border border-3 overflow-auto">
+                  <h5 className="card-title text-success rounded ">Available Seat Numbers</h5>
                   <div className="row">
                     {seatNum.map((curr, ind, arr) => {
-                      return !curr && <div className="col">{ind + 1}</div>;
+                      return !curr && <div key={ind} className="col">{ind + 1}</div>;
                     })}
                   </div>
                 </div>
@@ -144,11 +137,11 @@ function Booking() {
             </div>
             <div className="col">
               <div className="card" style={{ width: "35rem", height: "14rem" }}>
-                <div className="card-body">
-                  <h5 className="card-title">Reserved Seat Numbers</h5>
+                <div className="card-body border border-3 overflow-auto">
+                  <h5 className="card-title text-danger rounded ">Reserved Seat Numbers</h5>
                   <div className="row">
                     {seatNum.map((curr, ind, arr) => {
-                      return curr && <div className="col">{ind + 1}</div>;
+                      return curr && <div key={ind} className="col">{ind + 1}</div>;
                     })}
                   </div>
                 </div>
