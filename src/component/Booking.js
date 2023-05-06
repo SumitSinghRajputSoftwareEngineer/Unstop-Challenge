@@ -131,7 +131,7 @@ function Booking() {
         <div className="container">
           <div className="row mt-4">
             <div className="col">
-              <div className="card" style={{ width: "35rem", height: "16rem" }}>
+              <div className="card" style={{ width: "35rem", height: "14rem" }}>
                 <div className="card-body">
                   <h5 className="card-title">Available Seat Numbers</h5>
                   <div className="row">
@@ -143,9 +143,14 @@ function Booking() {
               </div>
             </div>
             <div className="col">
-              <div className="card" style={{ width: "35rem", height: "16rem" }}>
+              <div className="card" style={{ width: "35rem", height: "14rem" }}>
                 <div className="card-body">
                   <h5 className="card-title">Reserved Seat Numbers</h5>
+                  <div className="row">
+                    {seatNum.map((curr, ind, arr) => {
+                      return curr && <div className="col">{ind + 1}</div>;
+                    })}
+                  </div>
                 </div>
               </div>
             </div>
